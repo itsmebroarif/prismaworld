@@ -141,49 +141,13 @@ export class AudioFX {
   }
 }
 
-export class Pad {
+import { AmbientAudioSystem, AMBIENT_TRACKS } from './ambient_audio.js';
+
+export { AmbientAudioSystem, AMBIENT_TRACKS };
+
+// Backward-compatible alias so existing pad calls seamlessly trigger AmbientAudioSystem
+export class Pad extends AmbientAudioSystem {
   constructor(sfx) {
-    this.sfx = sfx;
-    this.nodes = [];
-    this.key = 'menu';
-  }
-  stop() {
-    if (!this.nodes.length || !this.sfx.ctx) return;
-    const now = this.sfx.ctx.currentTime;
-    for (const n of this.nodes) {
-      try {
-        n.g.gain.cancelScheduledValues(now);
-        n.g.gain.setTargetAtTime(.0001, now, .35);
-        n.o.stop(now + 1.5);
-        if (n.lfo) n.lfo.stop(now + 1.5);
-      } catch (e) { }
-    }
-    this.nodes = [];
-  }
-  start(key) {
-    this.key = key;
-    this.sfx.ensure();
-    if (!this.sfx.ctx) return;
-    this.stop();
-    const c = this.sfx.ctx, now = c.currentTime;
-    const CH = {
-      menu: [196, 246.9, 293.7, 392], park: [261.6, 329.6, 392, 587.3], server: [110, 130.8, 164.8, 220],
-      city: [174.6, 220, 261.6, 349.2], funfair: [261.6, 329.6, 392, 493.9], beach: [220, 277.2, 329.6, 440],
-      desert: [196, 233.1, 293.7, 349.2], snow: [246.9, 293.7, 370, 493.9], forest: [174.6, 207.7, 261.6, 311.1],
-      orbit: [130.8, 164.8, 196, 261.6]
-    }[key] || [220, 277, 330];
-    CH.forEach(f => {
-      const o = c.createOscillator(), g = c.createGain(), lfo = c.createOscillator(), lg = c.createGain();
-      o.type = 'sine';
-      o.frequency.value = f * (1 + (Math.random() * .003 - .0015));
-      g.gain.value = .0001;
-      g.gain.setTargetAtTime(.013, now, 2);
-      lfo.frequency.value = .05 + Math.random() * .07;
-      lg.gain.value = .006;
-      lfo.connect(lg); lg.connect(g.gain);
-      o.connect(g); g.connect(this.sfx.master);
-      o.start(now); lfo.start(now);
-      this.nodes.push({ o, g, lfo });
-    });
+    super(sfx);
   }
 }

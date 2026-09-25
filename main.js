@@ -5,6 +5,7 @@ import { WeaponManager, WEAPON_DEFS } from './js/weapons.js';
 import { MonsterSystem } from './js/monsters.js';
 import { NPCSystem } from './js/npc.js';
 import { MenuWorldScene } from './js/menu_world.js';
+import { Minimap } from './js/minimap.js';
 
 /* ================= UTIL & HELPERS ================= */
 const $ = s => document.querySelector(s);
@@ -17,6 +18,25 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 /* ================= AUDIO ================= */
 export const sfx = new AudioFX();
 export const pad = new Pad(sfx);
+
+const ambientToastEl = $('#ambientTrackToast');
+let ambientToastTimer = null;
+pad.onTrackChange = (trackDef) => {
+  if (!ambientToastEl) return;
+  const tagEl = $('#attTag');
+  const titleEl = $('#attTitle');
+  const subEl = $('#attSub');
+  if (tagEl) tagEl.textContent = `AMBIENT AUDIO · ${trackDef.category.toUpperCase()}`;
+  if (titleEl) titleEl.textContent = trackDef.title;
+  if (subEl) subEl.textContent = trackDef.subtitle;
+  ambientToastEl.classList.remove('hidden');
+  ambientToastEl.classList.add('show');
+  clearTimeout(ambientToastTimer);
+  ambientToastTimer = setTimeout(() => {
+    ambientToastEl.classList.remove('show');
+  }, 4200);
+};
+
 addEventListener('pointerdown', () => {
   sfx.ensure();
   if (sfx.ctx && !pad.nodes.length) pad.start(pad.key);
@@ -273,6 +293,12 @@ addEventListener('resize', () => {
 });
 
 export const menuWorld = new MenuWorldScene(renderer);
+
+export const minimap = new Minimap({
+  containerEl: $('#minimapContainer'),
+  canvasEl: $('#minimapCanvas'),
+  toggleBtnEl: $('#minimapToggleBtn')
+});
 
 export const M = {
   std: (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: o.r ?? .85, metalness: o.m ?? 0 }),
@@ -1067,6 +1093,7 @@ export function loadWorld(key) {
   hudEl.classList.remove('hidden');
   $('#pauseBtn').classList.remove('hidden');
   $('#raidBtn').classList.remove('hidden');
+  $('#minimapToggleBtn')?.classList.remove('hidden');
   weaponHudEl.classList.remove('hidden');
 
   $('#hudName').textContent = meta.name;
@@ -1438,6 +1465,8 @@ function exitToMenu() {
     hudEl.classList.add('hidden');
     $('#pauseBtn').classList.add('hidden');
     $('#raidBtn').classList.add('hidden');
+    $('#minimapToggleBtn')?.classList.add('hidden');
+    $('#ambientTrackToast')?.classList.remove('show');
     weaponHudEl.classList.add('hidden');
     touchCombatEl.classList.add('hidden');
     bossBarEl.classList.add('hidden');
@@ -1541,6 +1570,13 @@ function loop(now) {
       world.update(dt, t);
       checkLandmarks();
       if (!world.riding && !world.drivingVehicle) updateCompass();
+
+      // Render circular minimap tracking player relative to discovered landmarks
+      if (minimap) {
+        const pPos = world.drivingVehicle ? world.drivingVehicle.pos : player.pos;
+        const pYaw = world.drivingVehicle ? world.drivingVehicle.yaw : player.yaw;
+        minimap.render(pPos, pYaw, world.landmarks, worldKey, dt);
+      }
 
       // 3. Monsters & Titans
       if (monsterSystem) {
