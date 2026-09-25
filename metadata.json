@@ -1,0 +1,8 @@
+{
+  "name": "Prisma Worlds",
+  "description": "Portal Jelajah 3D · 9 Dunia - Sembilan dunia 3D untuk dijelajahi santai dengan Three.js, kendaraan, aksi monster & titan raksasa.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ],
+  "permissions": []
+}
