@@ -6,6 +6,9 @@ import { MonsterSystem } from './js/monsters.js';
 import { NPCSystem } from './js/npc.js';
 import { MenuWorldScene } from './js/menu_world.js';
 import { Minimap } from './js/minimap.js';
+import { FunfairParkManager } from './js/funfair_rides.js';
+import { RhythmGame } from './js/rhythm_game.js';
+import { CarnivalShootingGame } from './js/carnival_games.js';
 
 /* ================= UTIL & HELPERS ================= */
 const $ = s => document.querySelector(s);
@@ -102,7 +105,7 @@ export const WORLDS = {
   park: { idx: '01', name: 'Taman Seroja', acc: '#7ce3a0', hex: 0x7ce3a0, icon: 'local_florist', cat: 'nature', total: 5, desc: 'Taman pagi cerah — air mancur, danau, kupu-kupu, Prisma Buggy & botanis ramah.' },
   server: { idx: '02', name: 'Area Server', acc: '#4de3d4', hex: 0x4de3d4, icon: 'memory', cat: 'scifi', total: 5, desc: 'Jantung data Prisma: rak holografik, kipas raksasa, Quantum Hover & mekanik sistem.' },
   city: { idx: '03', name: 'Kota Senja', acc: '#ffb36b', hex: 0xffb36b, icon: 'location_city', cat: 'scifi', total: 5, desc: 'Metropolis senja neon: layar raksasa, monorel lalu-lalang, Cyber Roadster & barista.' },
-  funfair: { idx: '04', name: 'Prisma Land', acc: '#00b0ff', hex: 0x00b0ff, icon: 'attractions', cat: 'action', total: 5, desc: 'Taman hiburan! Prisma Cyclone coaster 5 menit yang ngebut, bianglala, kart & kembang api.' },
+  funfair: { idx: '04', name: 'Prisma Land', acc: '#00b0ff', hex: 0x00b0ff, icon: 'attractions', cat: 'action', total: 8, desc: 'Taman hiburan megah! Bianglala, komedi putar, roller coaster, drop tower, kapal ayun, cangkir berputar & arkade ritme Prisma Beat!' },
   beach: { idx: '05', name: 'Pantai Karang', acc: '#5ec8f2', hex: 0x5ec8f2, icon: 'beach_access', cat: 'nature', total: 5, desc: 'Pulau berpasir putih: mercusuar tua, camar laut, dermaga kayu & buggy pantai.' },
   desert: { idx: '06', name: 'Gurun Kalaris', acc: '#ff9d5c', hex: 0xff9d5c, icon: 'wb_sunny', cat: 'combat', total: 5, desc: 'Gurun senja dengan piramida kuno, oasis tersembunyi, rover tempur & pengembara.' },
   snow: { idx: '07', name: 'Puncak Esna', acc: '#a5e8ff', hex: 0xa5e8ff, icon: 'ac_unit', cat: 'nature', total: 5, desc: 'Kabin hangat di danau beku kristal, keluarga salju & snowmobile penjelajah gletser.' },
@@ -146,12 +149,19 @@ addEventListener('keydown', e => {
   if (e.code === 'Digit4' && weaponManager) weaponManager.select(3);
   if (e.code === 'KeyR' && weaponManager) weaponManager.reload();
 
+  // Carnival & Rhythm Games shortcut [K]
+  if (e.code === 'KeyK' && phase === 'play' && rhythmGame && !rhythmGame.active && !carnivalShootingGame.active) {
+    rhythmGame.open();
+  }
+
   // Interaction Key [E]
   if (e.code === 'KeyE' && world && phase === 'play') {
     handleInteraction();
   }
   if (e.code === 'Escape') {
-    if (world && world.riding) exitRide();
+    if (rhythmGame && rhythmGame.active) rhythmGame.close();
+    else if (carnivalShootingGame && carnivalShootingGame.active) carnivalShootingGame.close();
+    else if (world && world.riding) exitRide();
     else if (world && world.drivingVehicle) exitVehicle();
     else if (phase === 'play' && !document.pointerLockElement) openDialog(pauseModal);
     else if (phase === 'paused' && currentDialog) closeDialog();
@@ -298,6 +308,16 @@ export const minimap = new Minimap({
   containerEl: $('#minimapContainer'),
   canvasEl: $('#minimapCanvas'),
   toggleBtnEl: $('#minimapToggleBtn')
+});
+
+export const rhythmGame = new RhythmGame({
+  containerEl: $('#rhythmModal'),
+  sfx
+});
+
+export const carnivalShootingGame = new CarnivalShootingGame({
+  containerEl: $('#shootingModal'),
+  sfx
 });
 
 export const M = {
@@ -655,103 +675,84 @@ class CityWorld extends World {
   clampBounds(p) { const r = Math.hypot(p.x, p.z); if (r > 72) { p.x *= 72 / r; p.z *= 72 / r; } }
 }
 
-// 4. PRISMA LAND (Amusement Park + Coaster + Carousel + Ferris Wheel)
+// 4. PRISMA LAND (Amusement Park: Biang Lala, Komedi Putar, Coaster, Drop Tower, Viking Ship, Cangkir Putar, Rhythm Game & Shooting Gallery)
 class FunWorld extends World {
   constructor() {
     super('funfair');
     this.spawn = { x: 0, z: 42, yaw: 0 };
     const S = this.scene;
-    S.background = new THREE.Color(0x3a1a4a);
-    S.fog = new THREE.Fog(0x5a2862, 70, 220);
-    S.add(skyDome(['#2a1a4a', '#7a2f6e', '#ff5f8a', '#ffc46b']));
-    S.add(new THREE.HemisphereLight(0xffd9ec, 0x3a2a4a, .9));
-    const dl = new THREE.DirectionalLight(0xffe0c0, 1.2); dl.position.set(-40, 60, 20); S.add(dl);
+    S.background = new THREE.Color(0x2d153e);
+    S.fog = new THREE.Fog(0x4a1e52, 80, 260);
+    S.add(skyDome(['#1e102f', '#5e2365', '#ff4d82', '#ffc163']));
+    S.add(new THREE.HemisphereLight(0xffe6f2, 0x2a1b3d, 1.0));
+    const dl = new THREE.DirectionalLight(0xffecd0, 1.35); dl.position.set(-50, 75, 30); S.add(dl);
 
-    // Park Ground
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(450, 450), M.std(0x4aa35e, { r: .9 }));
+    // Park Ground with festival paths
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), M.std(0x3e8a52, { r: 0.9 }));
     ground.rotation.x = -Math.PI / 2; S.add(ground);
 
-    // Coaster Setup (Prisma Cyclone)
-    this.buildCoaster(S);
+    // Paved Central Plaza
+    const plaza = new THREE.Mesh(new THREE.CircleGeometry(32, 32), M.std(0x5a6372, { r: 0.8 }));
+    plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; S.add(plaza);
 
-    // Carousel Setup
-    this.carAng = 0;
-    this.carouselGroup = new THREE.Group();
-    this.carouselGroup.position.set(0, 0, -6);
-    const cBase = cyl(5, 5.2, .4, M.std(0xe8dcc8), 24); cBase.position.y = .2;
-    const cRoof = new THREE.Mesh(new THREE.ConeGeometry(5.2, 2.2, 24), M.std(0xff6fb5, { r: .5 }));
-    cRoof.position.y = 5.4;
-    this.carouselGroup.add(cBase, cRoof);
-    S.add(this.carouselGroup);
+    // Instantiate complete park attractions & atmosphere manager!
+    this.parkManager = new FunfairParkManager(this, S);
 
-    // Ferris Wheel Setup
-    this.wheelAng = 0;
-    this.wheelX = 32; this.wheelY = 13; this.wheelZ = -16; this.wheelR = 10;
-    const wGroup = new THREE.Group(); wGroup.position.set(this.wheelX, this.wheelY, this.wheelZ);
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(this.wheelR, .22, 8, 36), M.std(0xff6fb5));
-    wGroup.add(rim); S.add(wGroup);
-    this.wheelGroup = wGroup;
-
-    // Rides available
+    // Rides available to board and ride!
     this.rides = [
-      { type: 'coaster', x: this.stX, z: this.stZ, r: 5.5, label: 'Prisma Cyclone', icon: 'rocket_launch', exit: { x: this.stX - 2, z: this.stZ, yaw: Math.PI / 2 } },
-      { type: 'carousel', x: 0, z: -6, r: 6.5, label: 'Komedi Putar', icon: 'toys', exit: { x: 6, z: -6, yaw: Math.PI / 2 } },
-      { type: 'wheel', x: this.wheelX, z: this.wheelZ, r: 7.5, label: 'Bianglala Prisma', icon: 'donut_large', exit: { x: this.wheelX, z: this.wheelZ + 12, yaw: 0 } }
+      { type: 'coaster', x: this.stX, z: this.stZ, r: 6.5, label: 'Prisma Cyclone (Coaster)', icon: 'rocket_launch', exit: { x: this.stX - 2, z: this.stZ, yaw: Math.PI / 2 } },
+      { type: 'carousel', x: 0, z: -6, r: 7.5, label: 'Komedi Putar Prisma', icon: 'toys', exit: { x: 7.5, z: -6, yaw: Math.PI / 2 } },
+      { type: 'wheel', x: this.parkManager.wheelX, z: this.parkManager.wheelZ, r: 8.5, label: 'Bianglala Senja (Ferris Wheel)', icon: 'donut_large', exit: { x: this.parkManager.wheelX, z: this.parkManager.wheelZ + 10, yaw: 0 } },
+      { type: 'droptower', x: this.parkManager.dropX, z: this.parkManager.dropZ, r: 6.5, label: 'Menara Terjun Bebas (Drop Tower)', icon: 'arrow_downward', exit: { x: this.parkManager.dropX + 5, z: this.parkManager.dropZ, yaw: Math.PI / 2 } },
+      { type: 'vikingship', x: this.parkManager.shipX, z: this.parkManager.shipZ, r: 7.5, label: 'Kapal Bajak Laut (Viking Ship)', icon: 'sailing', exit: { x: this.parkManager.shipX + 6, z: this.parkManager.shipZ, yaw: Math.PI / 2 } },
+      { type: 'teacups', x: this.parkManager.cupX, z: this.parkManager.cupZ, r: 8.5, label: 'Cangkir Berputar (Spinning Teacups)', icon: 'coffee', exit: { x: this.parkManager.cupX + 8, z: this.parkManager.cupZ, yaw: Math.PI / 2 } }
+    ];
+
+    // Interactive minigames booths!
+    this.minigames = [
+      { id: 'rhythm', x: this.parkManager.rhythmX, z: this.parkManager.rhythmZ, r: 6.0, label: 'Main Prisma Beat (Rhythm Game)', icon: 'music_note' },
+      { id: 'shooting', x: this.parkManager.shootX, z: this.parkManager.shootZ, r: 6.0, label: 'Main Tembak Sasaran Karnaval', icon: 'crisis_alert' }
     ];
 
     // Vehicle: Cyclone Racer Kart
-    this.addVehicle('kart', 12, 34, 0, 'Cyclone Kart', 0xff6fb5);
+    this.addVehicle('kart', 12, 34, 0, 'Cyclone Kart', 0xff3b94);
 
     // NPCs
     this.npcSystem.addNPC({
-      id: 'luna', name: 'Luna', role: 'civilian', title: 'Penjaga Wahana Prisma',
-      speech: 'Selamat datang di Prisma Land! Naiklah Prisma Cyclone jika kamu berani melaju 180 km/j!',
-      x: 4, z: 24, cloth: 0xff6fb5
+      id: 'luna', name: 'Luna', role: 'civilian', title: 'Pemandu Wahana Prisma',
+      speech: 'Selamat datang di Prisma Land! Coba semua wahana: Bianglala, Komedi Putar, Coaster, Drop Tower, Kapal Ayun, dan Arkade Musik Prisma Beat!',
+      x: 4, z: 24, cloth: 0xff3b94
     });
     this.npcSystem.addNPC({
       id: 'guard_fun', name: 'Satpam Bobi', role: 'guard', title: 'Keamanan Taman Bermain',
-      speech: 'Aku selalu waspada! Jangan biarkan monster merusak wahana bermain anak-anak!',
+      speech: 'Aku selalu waspada menjaga keamanan festival! Nikmati wahana dan arkade sepuasnya!',
       x: -4, z: 28, cloth: 0x3d2b4a
+    });
+    this.npcSystem.addNPC({
+      id: 'dj_max', name: 'DJ Max', role: 'civilian', title: 'DJ Panggung Prisma Beat',
+      speech: 'Siap menari dan ikuti ketukan? Buka arkade musik Prisma Beat di panggung neon ini!',
+      x: this.parkManager.rhythmX + 2.5, z: this.parkManager.rhythmZ + 1.2, cloth: 0x00d2ff
     });
 
     const AC = WORLDS.funfair.hex;
-    this.landmark({ id: 'coaster', x: this.stX, z: this.stZ, r: 6, color: AC, icon: 'rocket_launch', title: 'Stasiun Prisma Cyclone', fact: 'Roller coaster 5 menit legendaris dengan 6 lap yang makin ngebut!' });
-    this.landmark({ id: 'carousel', x: 0, z: -6, r: 6, color: AC, icon: 'toys', title: 'Komedi Putar Prisma', fact: 'Wahana klasik dengan kuda-kuda kayu berukir halus.' });
-    this.landmark({ id: 'wheel', x: this.wheelX, z: this.wheelZ, r: 7, color: AC, icon: 'donut_large', title: 'Bianglala Senja', fact: 'Melihat pemandangan seluruh taman dari ketinggian 23 meter.' });
-    this.landmark({ id: 'gate', x: 0, z: 38, r: 5, color: AC, icon: 'flag', title: 'Gerbang Prisma Land', fact: 'Pintu gerbang ikonis dengan lampion warna-warni menyambut semua pengunjung.' });
-    this.landmark({ id: 'popcorn', x: 14, z: 12, r: 4, color: AC, icon: 'lunch_dining', title: 'Kedai Jagung Manis', fact: 'Aroma karamel manis selalu tercium dari kedai kuno ini.' });
-  }
-
-  buildCoaster(S) {
-    const NP = 200, pts = [];
-    for (let i = 0; i < NP; i++) {
-      const t = i / NP, th = t * Math.PI * 2;
-      const R = 95 + 26 * Math.sin(th * 3);
-      const y = 3 + 18 * Math.sin(th * 2 + 1) + (th > 2 && th < 4 ? 14 : 0);
-      pts.push(new THREE.Vector3(Math.cos(th) * R, Math.max(2, y), Math.sin(th) * R));
-    }
-    this.curve = new THREE.CatmullRomCurve3(pts, true, 'catmullrom', .5);
-    const L = this.curve.getLength();
-    this.coaster = { curve: this.curve, L, totalLaps: 6 };
-
-    const p0 = this.curve.getPointAt(0);
-    this.stX = p0.x - 3.5; this.stZ = p0.z;
-
-    // Track Rails
-    const railMat = new THREE.MeshStandardMaterial({ color: 0xd8dde6, metalness: .85, roughness: .35 });
-    const tubeG = new THREE.TubeGeometry(this.curve, 350, .14, 6, true);
-    S.add(new THREE.Mesh(tubeG, railMat));
+    this.landmark({ id: 'coaster', x: this.stX, z: this.stZ, r: 6.5, color: AC, icon: 'rocket_launch', title: 'Stasiun Prisma Cyclone', fact: 'Roller coaster 5 menit legendaris dengan kecepatan 160 km/j dan 6 putaran!' });
+    this.landmark({ id: 'carousel', x: 0, z: -6, r: 7, color: AC, icon: 'toys', title: 'Komedi Putar Prisma', fact: 'Wahana klasik dengan kuda-kuda kayu berukir halus & lampu gemerlap.' });
+    this.landmark({ id: 'wheel', x: this.parkManager.wheelX, z: this.parkManager.wheelZ, r: 8, color: AC, icon: 'donut_large', title: 'Bianglala Senja', fact: 'Melihat panorama seluruh taman bermain dari ketinggian 28 meter!' });
+    this.landmark({ id: 'droptower', x: this.parkManager.dropX, z: this.parkManager.dropZ, r: 6.5, color: AC, icon: 'arrow_downward', title: 'Menara Terjun Bebas', fact: 'Sensasi terjun bebas dari puncak menara baja 38 meter!' });
+    this.landmark({ id: 'vikingship', x: this.parkManager.shipX, z: this.parkManager.shipZ, r: 7, color: AC, icon: 'sailing', title: 'Kapal Bajak Laut Samudra', fact: 'Sensasi terombang-ambing di udara dengan ayunan pendulum raksasa 75 derajat.' });
+    this.landmark({ id: 'teacups', x: this.parkManager.cupX, z: this.parkManager.cupZ, r: 7.5, color: AC, icon: 'coffee', title: 'Wahana Cangkir Berputar', fact: 'Berputar ria di dalam cangkir raksasa mengelilingi teko emas.' });
+    this.landmark({ id: 'rhythm', x: this.parkManager.rhythmX, z: this.parkManager.rhythmZ, r: 6, color: AC, icon: 'music_note', title: 'Panggung Prisma Beat', fact: 'Arkade musik ritme interaktif dengan lagu-lagu synthesizer berenergi tinggi.' });
+    this.landmark({ id: 'shooting', x: this.parkManager.shootX, z: this.parkManager.shootZ, r: 6, color: AC, icon: 'crisis_alert', title: 'Stan Tembak Sasaran', fact: 'Uji ketangkasan menembak bebek renang dan bintang emas dalam 30 detik!' });
   }
 
   update(dt, t) {
     super.update(dt, t);
-    this.carAng += dt * .5;
-    this.carouselGroup.rotation.y = this.carAng;
-    this.wheelAng += dt * .18;
-    this.wheelGroup.rotation.z = this.wheelAng;
+    if (this.parkManager) {
+      this.parkManager.update(dt, t);
+    }
   }
 
-  // FIXED RIDE CAMERA (NO BUGS, SMOOTH FOLLOWING)
+  // FIXED RIDE CAMERA FOR ALL RIDES
   updateRide(dt, t) {
     const r = this.riding;
     if (!r) return;
@@ -762,7 +763,7 @@ class FunWorld extends World {
 
     if (r.type === 'coaster') {
       const c = this.coaster;
-      r.v = damp(r.v, 12 + r.lap * 6.5, 1.8, dt);
+      r.v = damp(r.v, 14 + r.lap * 6.5, 1.8, dt);
       r.s += r.v * dt;
       const u = ((r.s % c.L) / c.L + 1) % 1;
       const newLap = Math.floor(r.s / c.L);
@@ -785,23 +786,43 @@ class FunWorld extends World {
       camera.rotateX(r.pitchOff);
       sfx.setWind(r.v);
     } else if (r.type === 'carousel') {
-      const a = this.carAng;
-      camera.position.set(Math.cos(a) * 3.4, 1.8 + Math.sin(t * 3) * .2, -6 + Math.sin(a) * 3.4);
+      const a = this.parkManager ? this.parkManager.carAng : 0;
+      camera.position.set(Math.cos(a) * 4.2, 1.8 + Math.sin(t * 3.2) * 0.35, -6 + Math.sin(a) * 4.2);
       camera.rotation.set(r.pitchOff, -a + Math.PI / 2 + r.yawOff, 0);
     } else if (r.type === 'wheel') {
-      const a = this.wheelAng;
-      const px = this.wheelX + Math.cos(a) * this.wheelR;
-      const py = this.wheelY + Math.sin(a) * this.wheelR;
-      camera.position.set(px, py + 1.2, this.wheelZ);
-      // Smooth outward landscape view without gimbal flips!
+      const a = this.parkManager ? this.parkManager.wheelAng : 0;
+      const px = this.parkManager.wheelX + Math.cos(a) * this.parkManager.wheelR;
+      const py = this.parkManager.wheelY + Math.sin(a) * this.parkManager.wheelR;
+      camera.position.set(px, py + 1.1, this.parkManager.wheelZ);
       camera.rotation.set(r.pitchOff, Math.PI / 2 + r.yawOff, 0);
+    } else if (r.type === 'droptower') {
+      const dy = this.parkManager ? this.parkManager.dropY : 2;
+      camera.position.set(this.parkManager.dropX, dy + 1.3, this.parkManager.dropZ + 2.4);
+      camera.rotation.set(r.pitchOff, r.yawOff, 0);
+      if (this.parkManager && this.parkManager.dropState === 'drop') {
+        sfx.setWind(28);
+      } else {
+        sfx.setWind(0);
+      }
+    } else if (r.type === 'vikingship') {
+      const sa = this.parkManager ? this.parkManager.shipAng : 0;
+      const pz = this.parkManager.shipZ + Math.sin(sa) * this.parkManager.shipArmLen;
+      const py = 18.2 - Math.cos(sa) * this.parkManager.shipArmLen;
+      camera.position.set(this.parkManager.shipX, py + 1.2, pz);
+      camera.rotation.set(sa + r.pitchOff, Math.PI / 2 + r.yawOff, 0);
+    } else if (r.type === 'teacups') {
+      const ta = this.parkManager ? this.parkManager.teacupsAng : 0;
+      const px = this.parkManager.cupX + Math.cos(ta) * 4.8;
+      const pz = this.parkManager.cupZ + Math.sin(ta) * 4.8;
+      camera.position.set(px, 1.5, pz);
+      camera.rotation.set(r.pitchOff, ta * 3.2 + r.yawOff, 0);
     }
 
     updateRideHUD(r);
   }
   clampBounds(p) {
     const r = Math.hypot(p.x, p.z);
-    if (r > 120) { p.x *= 120 / r; p.z *= 120 / r; }
+    if (r > 150) { p.x *= 150 / r; p.z *= 150 / r; }
   }
 }
 
@@ -1094,6 +1115,11 @@ export function loadWorld(key) {
   $('#pauseBtn').classList.remove('hidden');
   $('#raidBtn').classList.remove('hidden');
   $('#minimapToggleBtn')?.classList.remove('hidden');
+  if (key === 'funfair') {
+    $('#carnivalGamesBtn')?.classList.remove('hidden');
+  } else {
+    $('#carnivalGamesBtn')?.classList.add('hidden');
+  }
   weaponHudEl.classList.remove('hidden');
 
   $('#hudName').textContent = meta.name;
@@ -1189,6 +1215,17 @@ function checkInteractions() {
     }
   }
 
+  // Check minigames
+  if (world.minigames) {
+    for (const mg of world.minigames) {
+      const d = Math.hypot(player.pos.x - mg.x, player.pos.z - mg.z);
+      if (d < mg.r && d < minDistance) {
+        minDistance = d;
+        nearestTarget = { type: 'minigame', obj: mg, label: mg.label, icon: mg.icon };
+      }
+    }
+  }
+
   if (nearestTarget) {
     currentPromptTarget = nearestTarget;
     $('#apTitle').textContent = nearestTarget.label;
@@ -1210,6 +1247,12 @@ function handleInteraction() {
     openNPCDialog(currentPromptTarget.obj);
   } else if (currentPromptTarget.type === 'ride') {
     boardRide(currentPromptTarget.obj);
+  } else if (currentPromptTarget.type === 'minigame') {
+    if (currentPromptTarget.obj.id === 'rhythm') {
+      rhythmGame.open();
+    } else if (currentPromptTarget.obj.id === 'shooting') {
+      carnivalShootingGame.open();
+    }
   }
 }
 
@@ -1245,6 +1288,16 @@ function boardRide(ride) {
   if (ride.type === 'coaster') {
     sfx.startWind();
     snackbar('Prisma Cyclone dimulai! Pegangan erat-erat ya.');
+  } else if (ride.type === 'wheel') {
+    snackbar('Menikmati panorama indah dari Bianglala Senja!');
+  } else if (ride.type === 'droptower') {
+    snackbar('Menara Terjun Bebas: Bersiaplah meluncur dari puncak 38 meter!');
+  } else if (ride.type === 'vikingship') {
+    snackbar('Kapal Bajak Laut: Sensasi berayun tinggi di udara!');
+  } else if (ride.type === 'carousel') {
+    snackbar('Komedi Putar: Berputar manis di atas kuda kayu klasik!');
+  } else if (ride.type === 'teacups') {
+    snackbar('Cangkir Berputar: Wahana ria berputar mengitari teko emas!');
   }
   updateRideHUD(world.riding);
 }
@@ -1270,6 +1323,29 @@ function updateRideHUD(r) {
     $('#rhSpeed').textContent = `${Math.round(r.v * 3.6)} km/j`;
     fill.classList.remove('indet');
     fill.style.width = `${Math.min(100, (r.s / (world.coaster.L * 6)) * 100)}%`;
+  } else if (r.type === 'wheel') {
+    const py = world.parkManager ? Math.round(world.parkManager.wheelY + Math.sin(world.parkManager.wheelAng) * world.parkManager.wheelR) : 16;
+    $('#rhLap').textContent = `Tinggi: ${py}m`;
+    $('#rhSpeed').textContent = '12 RPM';
+    fill.classList.add('indet');
+  } else if (r.type === 'droptower') {
+    const dy = world.parkManager ? Math.round(world.parkManager.dropY) : 2;
+    $('#rhLap').textContent = `Tinggi: ${dy}m`;
+    $('#rhSpeed').textContent = world.parkManager ? world.parkManager.dropState.toUpperCase() : 'SIAP';
+    fill.classList.add('indet');
+  } else if (r.type === 'vikingship') {
+    const deg = world.parkManager ? Math.round(Math.abs(world.parkManager.shipAng * (180 / Math.PI))) : 0;
+    $('#rhLap').textContent = `Ayunan: ${deg}°`;
+    $('#rhSpeed').textContent = 'AYUN MAKSIMAL';
+    fill.classList.add('indet');
+  } else if (r.type === 'teacups') {
+    $('#rhLap').textContent = 'Cangkir Putar';
+    $('#rhSpeed').textContent = '45 RPM';
+    fill.classList.add('indet');
+  } else if (r.type === 'carousel') {
+    $('#rhLap').textContent = 'Komedi Putar';
+    $('#rhSpeed').textContent = '18 RPM';
+    fill.classList.add('indet');
   } else {
     $('#rhLap').textContent = r.label;
     $('#rhSpeed').textContent = '—';
@@ -1466,6 +1542,7 @@ function exitToMenu() {
     $('#pauseBtn').classList.add('hidden');
     $('#raidBtn').classList.add('hidden');
     $('#minimapToggleBtn')?.classList.add('hidden');
+    $('#carnivalGamesBtn')?.classList.add('hidden');
     $('#ambientTrackToast')?.classList.remove('show');
     weaponHudEl.classList.add('hidden');
     touchCombatEl.classList.add('hidden');
@@ -1487,6 +1564,10 @@ function exitToMenu() {
 actionPromptEl.addEventListener('click', handleInteraction);
 $('#vhExit').addEventListener('click', exitVehicle);
 $('#rhExit').addEventListener('click', exitRide);
+$('#carnivalGamesBtn')?.addEventListener('click', () => {
+  sfx.click();
+  rhythmGame.open();
+});
 $('#raidBtn').addEventListener('click', () => {
   sfx.click();
   if (monsterSystem && world) monsterSystem.spawnRaid(world.scene, player.pos);

@@ -287,6 +287,329 @@ body.touch #discSheet{bottom:calc(190px + env(safe-area-inset-bottom));transform
 body.touch #discSheet.show{transform:translate(-50%,0)}
 body.touch #actionPrompt{bottom:calc(280px + env(safe-area-inset-bottom))}
 
+/* RHYTHM GAME & CARNIVAL GAMES MODALS */
+.rhythm-modal, .shooting-modal {
+  background: rgba(4, 7, 14, 0.82);
+  backdrop-filter: blur(14px);
+  z-index: 65;
+}
+.rhythm-modal-sheet, .shooting-modal-sheet {
+  width: min(580px, 95vw);
+  background: rgba(12, 20, 34, 0.94);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+  color: var(--on-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.rhythm-header, .shooting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.rhythm-title-wrap, .shooting-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.rhythm-ico, .shooting-ico {
+  font-size: 32px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rhythm-title, .shooting-title {
+  font: 800 18px var(--f-display);
+  letter-spacing: -0.3px;
+}
+.rhythm-sub, .shooting-sub {
+  font: 500 12.5px var(--f-body);
+  color: var(--on-surface-var);
+}
+.rhythm-song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rhythm-song-card {
+  background: rgba(22, 35, 54, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.rhythm-song-card:hover {
+  background: rgba(30, 48, 74, 0.9);
+  border-color: var(--accent);
+}
+.rsc-header {
+  display: flex;
+  justify-content: space-between;
+  font: 700 11px var(--f-body);
+  color: var(--accent);
+}
+.rsc-title {
+  font: 800 16px var(--f-display);
+}
+.rsc-artist {
+  font: 500 12px var(--f-body);
+  color: var(--on-surface-var);
+}
+.rhythm-play-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #061424;
+  border: none;
+  font: 700 12px var(--f-body);
+  cursor: pointer;
+  margin-top: 4px;
+}
+.rhythm-play-view, .shooting-play-view {
+  width: min(580px, 95vw);
+  height: min(640px, 86dvh);
+  background: rgba(10, 16, 28, 0.95);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.rhythm-top-bar, .shooting-top-bar {
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.rhythm-playing-name {
+  font: 800 15px var(--f-display);
+  margin-bottom: 4px;
+}
+.rhythm-groove-bar {
+  width: 140px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.rgb-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00e676, #00d2ff);
+  transition: width 0.15s;
+}
+.rhythm-score-display {
+  text-align: right;
+}
+.rsd-label {
+  font: 700 10px var(--f-body);
+  letter-spacing: 1px;
+  color: var(--on-surface-var);
+}
+.rsd-val {
+  font: 800 18px monospace;
+  color: #38bdf8;
+}
+.rhythm-canvas-wrap, .shooting-canvas-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #090e18;
+}
+#rhythmCanvas, #shootingCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.rhythm-combo-wrap {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+.rcw-judgement {
+  font: 800 28px var(--f-display);
+  letter-spacing: 1px;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+}
+.rcw-judgement.bounce {
+  animation: bounceJudgement 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes bounceJudgement {
+  0% { transform: scale(0.6); opacity: 0.5; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.rcw-num {
+  font: 800 18px var(--f-display);
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  margin-top: 2px;
+}
+.rhythm-touch-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(14, 22, 38, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.rhythm-pad-btn {
+  height: 58px;
+  border-radius: 14px;
+  border: 1.5px solid var(--lane-col);
+  background: color-mix(in srgb, var(--lane-col) 15%, transparent);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  transition: all 0.08s;
+}
+.rhythm-pad-btn.pressed, .rhythm-pad-btn:active {
+  background: var(--lane-col);
+  color: #061424;
+  transform: scale(0.96);
+  box-shadow: 0 0 20px var(--lane-col);
+}
+.rpb-key {
+  font: 800 16px var(--f-display);
+}
+.rpb-hint {
+  font: 600 11px var(--f-body);
+  opacity: 0.7;
+}
+.rhythm-results-view, .shooting-results-view {
+  width: min(520px, 94vw);
+  background: rgba(12, 20, 36, 0.96);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 28px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.rrv-card, .srv-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.rrv-badge {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--rank-col) 20%, transparent);
+  border: 3px solid var(--rank-col);
+  color: var(--rank-col);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px color-mix(in srgb, var(--rank-col) 40%, transparent);
+  margin-bottom: 12px;
+}
+.rrv-rank {
+  font: 800 32px var(--f-display);
+  line-height: 1;
+}
+.rrv-rank-sub {
+  font: 700 8.5px var(--f-body);
+  letter-spacing: 1px;
+}
+.rrv-title, .srv-title {
+  font: 800 20px var(--f-display);
+}
+.rrv-score, .srv-score-num {
+  font: 800 34px monospace;
+  color: #38bdf8;
+  margin: 6px 0 14px;
+}
+.rrv-stats-grid, .srv-stats-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.rrv-stat, .srv-stat {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.rrv-stat .lbl, .srv-stat .lbl {
+  font: 600 12px var(--f-body);
+  color: var(--on-surface-var);
+}
+.rrv-stat .val, .srv-stat .val {
+  font: 700 14px var(--f-display);
+}
+.rrv-reward, .srv-reward {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(255, 234, 0, 0.12);
+  border: 1px solid rgba(255, 234, 0, 0.35);
+  border-radius: 14px;
+  font: 600 13px var(--f-body);
+  color: #ffea00;
+  margin-bottom: 20px;
+}
+.rrv-actions, .srv-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.shooting-rules-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.srg-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.srg-t {
+  font: 700 12.5px var(--f-body);
+}
+.srg-p {
+  font: 600 11.5px var(--f-body);
+  color: #38bdf8;
+}
+
 @media(max-width:760px){
   #landing{padding:0}
   .m3-device{border-radius:0;height:100dvh;width:100vw;border:none}
@@ -338,6 +661,7 @@ body.touch #actionPrompt{bottom:calc(280px + env(safe-area-inset-bottom))}
 </div>
 
 <div id="topRight">
+  <button class="icon-btn hidden" id="carnivalGamesBtn" aria-label="Permainan Karnaval & Arkade" title="Arkade Musik & Permainan [K]"><span class="msr">sports_esports</span></button>
   <button class="icon-btn hidden" id="minimapToggleBtn" aria-label="Toggle Minimap" title="Peta Radar [M]"><span class="msr">map</span></button>
   <button class="icon-btn hidden" id="raidBtn" aria-label="Panggil Monster"><span class="msr">swords</span></button>
   <button class="icon-btn hidden" id="pauseBtn" aria-label="Jeda"><span class="msr">pause</span></button>
@@ -591,6 +915,12 @@ body.touch #actionPrompt{bottom:calc(280px + env(safe-area-inset-bottom))}
     </div>
   </div>
 </div>
+
+<!-- MODAL RHYTHM GAME (PRISMA BEAT) -->
+<div class="modal rhythm-modal" id="rhythmModal"></div>
+
+<!-- MODAL SHOOTING GALLERY (TEMBAK SASARAN) -->
+<div class="modal shooting-modal" id="shootingModal"></div>
 
 <div id="snackbar"><span id="snackText"></span></div>
 
